@@ -1,5 +1,7 @@
 # Notion to Anki
 
+返答は日本語で行うこと。
+
 ## Project Overview
 
 Notionに保存されたフラッシュカードデータをAnkiへ出力する。
