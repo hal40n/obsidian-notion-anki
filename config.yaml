@@ -1,0 +1,23 @@
+notion:
+  api_key: ${NOTION_INTEGRATION_TOKEN}
+
+databases:
+  Deutsch: ${DEUTSCH_DATABASE_ID}
+
+note_types:
+  Deutsch: "SentenceVocab_DE"
+
+# TTS 言語コード（note_type ごと）
+tts_lang:
+  SentenceVocab_DE: "de_DE"
+  SentenceVocab_EN: "en_US"
+
+obsidian:
+  vault_path: ${OBSIDIAN_VAULT_PATH}
+  vocab_dirs:
+    - "vocab/de"
+    - "vocab/en"
+    - "vocab/cert"
+
+anki:
+  url: "http://localhost:8765"

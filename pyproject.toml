@@ -1,0 +1,105 @@
+[project]
+name = "obsidian-notion-anki"
+version = "0.1.0"
+description = "Obsidian → Notion → Anki 語彙学習ワークフロー"
+requires-python = ">=3.12"
+dependencies = [
+    "notion-client>=2.0.0,<3.0.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9.0",
+    "mypy>=1.14.0",
+    "poethepoet>=0.38.0",
+    "types-pyyaml>=6.0.0",
+    "types-requests>=2.31.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+]
+
+# ─────────────────────────────────────────────
+# Poe the Poet — タスクランナー
+# ─────────────────────────────────────────────
+[tool.poe.tasks]
+
+# --- Anki セットアップ ---
+setup-anki = { cmd = "python setup_anki_note_types.py", help = "Phase 0: Anki ノートタイプ作成" }
+setup-anki-dry = { cmd = "python setup_anki_note_types.py --dry-run", help = "Phase 0: dry-run" }
+
+# --- 同期 ---
+sync = { cmd = "python notion_to_anki.py", help = "Phase 2: Notion → Anki 同期" }
+sync-dry = { cmd = "python notion_to_anki.py --dry-run", help = "Phase 2: dry-run" }
+sync-deck = { cmd = "python notion_to_anki.py --deck", help = "特定デッキのみ同期 (例: poe sync-deck Deutsch)" }
+
+# --- Phase 3: Obsidian → Notion ---
+obs2notion = { cmd = "python obsidian2notion.py", help = "Phase 3: Obsidian → Notion 同期" }
+obs2notion-dry = { cmd = "python obsidian2notion.py --dry-run", help = "Phase 3: dry-run" }
+
+# --- テスト ---
+test = { cmd = "pytest tests/", help = "テスト実行" }
+test-cov = { cmd = "pytest tests/ --cov=src --cov-report=term-missing --cov-fail-under=80", help = "カバレッジ付きテスト" }
+
+# --- リント・フォーマット ---
+lint = { cmd = "ruff check .", help = "Ruff でリントチェック" }
+fmt = { cmd = "ruff format .", help = "Ruff でフォーマット" }
+fmt-check = { cmd = "ruff format --check .", help = "フォーマット差分チェック" }
+
+# --- 型チェック ---
+typecheck = { cmd = "mypy .", help = "mypy で型チェック" }
+
+# --- まとめて実行 ---
+check = { sequence = ["fmt-check", "lint", "typecheck"], help = "フォーマット・リント・型チェックを一括実行" }
+fix = { sequence = ["fmt", "lint"], help = "フォーマット→リント修正" }
+
+# ─────────────────────────────────────────────
+# Ruff — リンター & フォーマッター
+# ─────────────────────────────────────────────
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "RUF",  # ruff-specific
+]
+ignore = [
+    "E501",   # line too long (formatter handles this)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["obsidian_notion_anki"]
+
+# ─────────────────────────────────────────────
+# mypy — 型チェック
+# ─────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false       # 段階的に厳しくする
+check_untyped_defs = true
+ignore_missing_imports = true       # notion-client 等に型スタブがない場合
+
+# ─────────────────────────────────────────────
+# pytest
+# ─────────────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["src/__init__.py", "src/templates.py"]
