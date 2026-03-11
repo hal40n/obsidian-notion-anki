@@ -1,2 +1,8 @@
 .env
 __pycache__/
+.venv/
+.coverage
+.coverage.*
+htmlcov/
+.claude/settings.json
+.cursor/settings.json
