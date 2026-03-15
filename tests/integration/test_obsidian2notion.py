@@ -1,8 +1,8 @@
 """obsidian2notion.py の統合テスト"""
 
+from unittest.mock import MagicMock
+
 import pytest
-from pathlib import Path
-from unittest.mock import MagicMock, patch, call
 
 
 @pytest.fixture
@@ -167,3 +167,122 @@ class TestSyncVocabDir:
 
         assert stats["updated"] > 0
         mock_notion.pages.update.assert_called()
+
+    def test_returns_zero_stats_when_no_files(self, mock_vault, mock_config, mock_notion):
+        from obsidian2notion import sync_vocab_dir
+
+        stats = sync_vocab_dir(
+            notion=mock_notion,
+            vault_path=mock_vault,
+            vocab_dir="vocab/nonexistent",
+            config=mock_config,
+            deck_filter=None,
+            dry_run=False,
+        )
+
+        assert stats == {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
+
+    def test_errors_when_db_id_not_in_config(self, mock_vault, mock_config, mock_notion):
+        from obsidian2notion import sync_vocab_dir
+
+        config_no_db = {**mock_config, "databases": {}}
+
+        stats = sync_vocab_dir(
+            notion=mock_notion,
+            vault_path=mock_vault,
+            vocab_dir="vocab/de",
+            config=config_no_db,
+            deck_filter=None,
+            dry_run=False,
+        )
+
+        assert stats["errors"] > 0
+        mock_notion.pages.create.assert_not_called()
+
+    def test_counts_error_when_upsert_raises(self, mock_vault, mock_config, mock_notion):
+        from obsidian2notion import sync_vocab_dir
+
+        mock_notion.databases.retrieve.side_effect = Exception("API error")
+
+        stats = sync_vocab_dir(
+            notion=mock_notion,
+            vault_path=mock_vault,
+            vocab_dir="vocab/de",
+            config=mock_config,
+            deck_filter="Deutsch",
+            dry_run=False,
+        )
+
+        assert stats["errors"] > 0
+
+    def test_skipped_entry_increments_skipped_counter(self, mock_vault, mock_config, mock_notion):
+        from obsidian2notion import sync_vocab_dir
+
+        # 既存ページが存在し、内容が同じ（スキップされる）
+        mock_notion.data_sources.query.return_value = {
+            "results": [
+                {
+                    "id": "existing-id",
+                    "properties": {
+                        "Meaning": {"type": "rich_text", "rich_text": [{"plain_text": "行く、歩く"}]},
+                        "Part of Speech": {"type": "select", "select": {"name": "Verb (unregelmäßig)"}},
+                        "Example": {"type": "rich_text", "rich_text": [{"plain_text": "Ich <<gehe>> jeden Morgen in den Park."}]},
+                        "Example Translation": {"type": "rich_text", "rich_text": [{"plain_text": "私は毎朝公園へ行く。"}]},
+                        "Usage": {"type": "rich_text", "rich_text": [{"plain_text": "gehen + Richtung"}]},
+                    },
+                }
+            ]
+        }
+
+        stats = sync_vocab_dir(
+            notion=mock_notion,
+            vault_path=mock_vault,
+            vocab_dir="vocab/de",
+            config=mock_config,
+            deck_filter="Deutsch",
+            dry_run=False,
+        )
+
+        assert stats["skipped"] > 0
+
+
+class TestMain:
+    def _base_config(self, vault_path: str, vocab_dirs: list) -> dict:
+        return {
+            "databases": {},
+            "note_types": {},
+            "obsidian": {"vault_path": vault_path, "vocab_dirs": vocab_dirs},
+            "notion_api_key": "ntn_test",
+        }
+
+    def test_exits_when_vault_path_not_configured(self, monkeypatch):
+        from obsidian2notion import main
+
+        config = self._base_config("/path/to/your/vault", ["vocab/de"])
+        monkeypatch.setattr("obsidian2notion.load_config", lambda: config)
+        monkeypatch.setattr("sys.argv", ["obsidian2notion.py"])
+
+        with pytest.raises(SystemExit):
+            main()
+
+    def test_exits_when_vault_path_does_not_exist(self, monkeypatch):
+        from obsidian2notion import main
+
+        config = self._base_config("/nonexistent/path/12345", ["vocab/de"])
+        monkeypatch.setattr("obsidian2notion.load_config", lambda: config)
+        monkeypatch.setattr("sys.argv", ["obsidian2notion.py"])
+
+        with pytest.raises(SystemExit):
+            main()
+
+    def test_exits_when_vocab_dirs_empty(self, monkeypatch, tmp_path):
+        from obsidian2notion import main
+
+        vault = tmp_path / "vault"
+        vault.mkdir()
+        config = self._base_config(str(vault), [])
+        monkeypatch.setattr("obsidian2notion.load_config", lambda: config)
+        monkeypatch.setattr("sys.argv", ["obsidian2notion.py"])
+
+        with pytest.raises(SystemExit):
+            main()

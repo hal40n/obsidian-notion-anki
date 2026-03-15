@@ -77,6 +77,9 @@ select = [
 ]
 ignore = [
     "E501",   # line too long (formatter handles this)
+    "RUF001", # 日本語文字列中の全角記号（意図的）
+    "RUF002", # 日本語 docstring 中の全角括弧（意図的）
+    "RUF003", # 日本語コメント中の全角括弧（意図的）
 ]
 
 [tool.ruff.lint.isort]

@@ -1,9 +1,15 @@
 """src/notion_sync.py のユニットテスト（純粋関数・軽量モック）"""
 
-import pytest
 from unittest.mock import MagicMock
 
-from src.notion_sync import get_text_property, _get_data_source_id, update_notion_page
+import pytest
+
+from src.notion_sync import (
+    _get_data_source_id,
+    fetch_entries,
+    get_text_property,
+    update_notion_page,
+)
 
 
 def _make_page(prop_type: str, prop_name: str, value) -> dict:
@@ -75,3 +81,107 @@ class TestUpdateNotionPage:
                 "Anki Note ID": {"number": 9876543},
             },
         )
+
+
+def _make_lang_page(page_id: str, word: str, meaning: str) -> dict:
+    return {
+        "id": page_id,
+        "properties": {
+            "Anki Status": {"type": "select", "select": {"name": "New"}},
+            "Anki Note ID": {"type": "number", "number": None},
+            "Word": {"type": "title", "title": [{"plain_text": word}]},
+            "Meaning": {"type": "rich_text", "rich_text": [{"plain_text": meaning}]},
+            "Part of Speech": {"type": "select", "select": None},
+            "Example": {"type": "rich_text", "rich_text": []},
+            "Example Translation": {"type": "rich_text", "rich_text": []},
+            "Usage": {"type": "rich_text", "rich_text": []},
+            "Sources": {"type": "rich_text", "rich_text": []},
+            "Language": {"type": "select", "select": {"name": "de"}},
+        },
+    }
+
+
+def _make_cert_page(page_id: str, term: str, definition: str, note_id: int | None = None) -> dict:
+    return {
+        "id": page_id,
+        "properties": {
+            "Anki Status": {"type": "select", "select": {"name": "Updated"}},
+            "Anki Note ID": {"type": "number", "number": note_id},
+            "Term": {"type": "title", "title": [{"plain_text": term}]},
+            "Definition": {"type": "rich_text", "rich_text": [{"plain_text": definition}]},
+            "Category": {"type": "select", "select": {"name": "ネットワーク"}},
+        },
+    }
+
+
+class TestFetchEntries:
+    def test_language_entry_mapped_correctly(self):
+        notion = MagicMock()
+        notion.databases.retrieve.return_value = {"data_sources": [{"id": "ds-id"}]}
+        notion.data_sources.query.return_value = {
+            "results": [_make_lang_page("p1", "gehen", "行く")],
+            "has_more": False,
+            "next_cursor": None,
+        }
+        config = {"note_types": {"Deutsch": "SentenceVocab_DE"}}
+
+        entries = fetch_entries(notion, "db-id", "Deutsch", config)
+
+        assert len(entries) == 1
+        assert entries[0]["word"] == "gehen"
+        assert entries[0]["meaning"] == "行く"
+        assert entries[0]["anki_status"] == "New"
+        assert entries[0]["anki_note_id"] is None
+
+    def test_cert_entry_mapped_correctly(self):
+        notion = MagicMock()
+        notion.databases.retrieve.return_value = {"data_sources": [{"id": "ds-id"}]}
+        notion.data_sources.query.return_value = {
+            "results": [_make_cert_page("p2", "スループット", "単位時間あたりのデータ量", note_id=12345)],
+            "has_more": False,
+            "next_cursor": None,
+        }
+        config = {"note_types": {"応用情報技術者": "TermDefinition"}}
+
+        entries = fetch_entries(notion, "db-id", "応用情報技術者", config)
+
+        assert len(entries) == 1
+        assert entries[0]["word"] == "スループット"
+        assert entries[0]["meaning"] == "単位時間あたりのデータ量"
+        assert entries[0]["anki_note_id"] == 12345
+
+    def test_pagination_fetches_all_pages(self):
+        notion = MagicMock()
+        notion.databases.retrieve.return_value = {"data_sources": [{"id": "ds-id"}]}
+        notion.data_sources.query.side_effect = [
+            {
+                "results": [_make_lang_page("p1", "gehen", "行く")],
+                "has_more": True,
+                "next_cursor": "cursor-1",
+            },
+            {
+                "results": [_make_lang_page("p2", "kommen", "来る")],
+                "has_more": False,
+                "next_cursor": None,
+            },
+        ]
+        config = {"note_types": {"Deutsch": "SentenceVocab_DE"}}
+
+        entries = fetch_entries(notion, "db-id", "Deutsch", config)
+
+        assert len(entries) == 2
+        assert notion.data_sources.query.call_count == 2
+
+    def test_returns_empty_when_no_results(self):
+        notion = MagicMock()
+        notion.databases.retrieve.return_value = {"data_sources": [{"id": "ds-id"}]}
+        notion.data_sources.query.return_value = {
+            "results": [],
+            "has_more": False,
+            "next_cursor": None,
+        }
+        config = {"note_types": {"Deutsch": "SentenceVocab_DE"}}
+
+        entries = fetch_entries(notion, "db-id", "Deutsch", config)
+
+        assert entries == []
