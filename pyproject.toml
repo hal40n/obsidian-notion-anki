@@ -27,17 +27,17 @@ dev = [
 [tool.poe.tasks]
 
 # --- Anki セットアップ ---
-setup-anki = { cmd = "python setup_anki_note_types.py", help = "Phase 0: Anki ノートタイプ作成" }
-setup-anki-dry = { cmd = "python setup_anki_note_types.py --dry-run", help = "Phase 0: dry-run" }
+setup-anki = { cmd = "python setup_anki_note_types.py", help = "Anki ノートタイプ作成" }
+setup-anki-dry = { cmd = "python setup_anki_note_types.py --dry-run", help = "dry-run" }
 
 # --- 同期 ---
-sync = { cmd = "python notion_to_anki.py", help = "Phase 2: Notion → Anki 同期" }
-sync-dry = { cmd = "python notion_to_anki.py --dry-run", help = "Phase 2: dry-run" }
+sync = { cmd = "python notion_to_anki.py", help = "Notion → Anki 同期" }
+sync-dry = { cmd = "python notion_to_anki.py --dry-run", help = "dry-run" }
 sync-deck = { cmd = "python notion_to_anki.py --deck", help = "特定デッキのみ同期 (例: poe sync-deck Deutsch)" }
 
 # --- Phase 3: Obsidian → Notion ---
-obs2notion = { cmd = "python obsidian2notion.py", help = "Phase 3: Obsidian → Notion 同期" }
-obs2notion-dry = { cmd = "python obsidian2notion.py --dry-run", help = "Phase 3: dry-run" }
+obs2notion = { cmd = "python obsidian2notion.py", help = "Obsidian → Notion 同期" }
+obs2notion-dry = { cmd = "python obsidian2notion.py --dry-run", help = "dry-run" }
 
 # --- テスト ---
 test = { cmd = "pytest tests/", help = "テスト実行" }
@@ -61,6 +61,7 @@ fix = { sequence = ["fmt", "lint"], help = "フォーマット→リント修正
 [tool.ruff]
 target-version = "py313"
 line-length = 100
+exclude = ["src/card.css"]
 
 [tool.ruff.lint]
 select = [
