@@ -1,11 +1,11 @@
 """
-Phase 0: Anki ノートタイプ自動作成スクリプト
+Anki ノートタイプ自動作成スクリプト
 ==========================================
-設計書 v4 に基づき、以下のノートタイプを AnkiConnect 経由で作成する。
-
+以下のノートタイプを AnkiConnect 経由で作成する。
   1. SentenceVocab_DE — ドイツ語 例文ベースカード（TTS付き）
   2. SentenceVocab_EN — 英語 例文ベースカード（TTS付き）
   3. TermDefinition   — 資格学習 用語→定義カード
+デッキは自動で作成される。
 
 前提条件:
   - Anki デスクトップが起動中
@@ -19,20 +19,46 @@ Phase 0: Anki ノートタイプ自動作成スクリプト
 import argparse
 import sys
 
-from src.anki_client import DEFAULT_URL, anki_request
+from src.anki_client import anki_request
 from src.templates import NOTE_TYPES
 
 
 def model_exists(name: str) -> bool:
+    """指定した名前のノートタイプが Anki に存在するか確認する。
+
+    Args:
+        name: ノートタイプ名。
+
+    Returns:
+        存在する場合は True。
+    """
     return name in anki_request("modelNames")
 
 
 def deck_exists(name: str) -> bool:
+    """指定した名前のデッキが Anki に存在するか確認する。
+
+    Args:
+        name: デッキ名。
+
+    Returns:
+        存在する場合は True。
+    """
     return name in anki_request("deckNames")
 
 
 def create_note_type(nt: dict, dry_run: bool = False) -> bool:
-    """ノートタイプを1つ作成する。"""
+    """ノートタイプを1つ作成する。
+
+    既に同名のノートタイプが存在する場合はスキップする。
+
+    Args:
+        nt: NOTE_TYPES の要素辞書（name / fields / css / front / back / deck / description）。
+        dry_run: True の場合、Anki への書き込みを行わず内容を表示するだけ。
+
+    Returns:
+        作成またはスキップ予定の場合は True、既存のためスキップした場合は False。
+    """
     name = nt["name"]
 
     if model_exists(name):
@@ -57,7 +83,15 @@ def create_note_type(nt: dict, dry_run: bool = False) -> bool:
 
 
 def create_deck(deck_name: str, dry_run: bool = False) -> bool:
-    """デッキを作成する（存在しなければ）。"""
+    """デッキを作成する（存在しない場合のみ）。
+
+    Args:
+        deck_name: 作成するデッキ名。
+        dry_run: True の場合、Anki への書き込みを行わず内容を表示するだけ。
+
+    Returns:
+        作成またはスキップ予定の場合は True、既存のためスキップした場合は False。
+    """
     if deck_exists(deck_name):
         print(f"  ⏭️  デッキ「{deck_name}」— 既に存在")
         return False
@@ -72,7 +106,14 @@ def create_deck(deck_name: str, dry_run: bool = False) -> bool:
 
 
 def add_sample_notes(dry_run: bool = False) -> None:
-    """動作確認用のサンプルカードを追加する。"""
+    """動作確認用のサンプルカードを Anki に追加する。
+
+    SentenceVocab_DE 2件・TermDefinition 1件を追加する。
+    既に存在するカードはスキップする。
+
+    Args:
+        dry_run: True の場合、Anki への書き込みを行わず追加予定内容を表示するだけ。
+    """
     samples = [
         {
             "deckName": "Deutsch",
@@ -135,14 +176,18 @@ def add_sample_notes(dry_run: bool = False) -> None:
                 print(f"  ❌ {word} — エラー: {e}")
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Anki ノートタイプ自動作成（設計書 v4 Phase 0）")
+def main() -> None:
+    """Anki ノートタイプセットアップのエントリポイント。
+
+    コマンドライン引数を解析し、デッキ・ノートタイプ・サンプルカードを順に作成する。
+    """
+    parser = argparse.ArgumentParser(description="Anki ノートタイプ自動作成")
     parser.add_argument("--dry-run", action="store_true", help="実行内容を確認するだけで実際には作成しない")
     parser.add_argument("--no-samples", action="store_true", help="サンプルカードを追加しない")
     args = parser.parse_args()
 
     print("=" * 56)
-    print("  Anki ノートタイプ セットアップ（設計書 v4 Phase 0）")
+    print("  Anki ノートタイプ セットアップ")
     print("=" * 56)
 
     if args.dry_run:
@@ -176,14 +221,14 @@ def main():
     else:
         print("  セットアップ完了！")
         print("  Anki でノートタイプとサンプルカードを確認してください。")
-        print(f"\n  確認手順:")
-        print(f"    1. Anki メニュー → ツール → ノートタイプの管理")
-        print(f"       SentenceVocab_DE / SentenceVocab_EN / TermDefinition があるか確認")
-        print(f"    2. 「Deutsch」デッキを開いてサンプルカードを確認")
-        print(f"    3. 「Certifications」デッキを開いてサンプルカードを確認")
-        print(f"\n  ⚠️  TTS を有効にするには:")
-        print(f"    macOS: システム設定 → アクセシビリティ → 読み上げ → ドイツ語音声を追加")
-        print(f"    iOS:   設定 → アクセシビリティ → 読み上げコンテンツ → 声 → ドイツ語DL")
+        print("\n  確認手順:")
+        print("    1. Anki メニュー → ツール → ノートタイプの管理")
+        print("       SentenceVocab_DE / SentenceVocab_EN / TermDefinition があるか確認")
+        print("    2. 「Deutsch」デッキを開いてサンプルカードを確認")
+        print("    3. 「Certifications」デッキを開いてサンプルカードを確認")
+        print("\n  ⚠️  TTS を有効にするには:")
+        print("    macOS: システム設定 → アクセシビリティ → 読み上げ → ドイツ語音声を追加")
+        print("    iOS:   設定 → アクセシビリティ → 読み上げコンテンツ → 声 → ドイツ語DL")
     print("=" * 56)
 
 
