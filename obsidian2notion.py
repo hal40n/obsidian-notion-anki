@@ -1,5 +1,5 @@
 """
-Phase 3: Obsidian → Notion 同期スクリプト
+Obsidian → Notion 同期スクリプト
 ==========================================
 Obsidian の vocab/ ディレクトリを走査し、anki_synced = false のエントリを
 Notion DB に登録（新規）または更新する。
@@ -17,7 +17,7 @@ Notion DB に登録（新規）または更新する。
 import argparse
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from notion_client import Client as NotionClient
@@ -36,7 +36,19 @@ def sync_vocab_dir(
     deck_filter: str | None,
     dry_run: bool,
 ) -> dict:
-    """1つの vocab_dir を処理し、統計を返す。"""
+    """1つの vocab_dir を走査して Notion に同期し、統計を返す。
+
+    Args:
+        notion: Notion クライアントインスタンス。
+        vault_path: Obsidian vault のルートパス。
+        vocab_dir: スキャン対象ディレクトリ（vault ルートからの相対パス）。
+        config: アプリケーション設定辞書。
+        deck_filter: 同期対象デッキ名。None の場合は全デッキを対象とする。
+        dry_run: True の場合、Notion への書き込みと frontmatter 更新を行わない。
+
+    Returns:
+        同期結果の統計辞書（created / updated / skipped / errors）。
+    """
     stats = {"created": 0, "updated": 0, "skipped": 0, "errors": 0}
     databases = config.get("databases", {})
 
@@ -81,7 +93,7 @@ def sync_vocab_dir(
 
             # 成功時にのみ frontmatter を更新
             if not dry_run and result in ("created", "updated"):
-                iso_now = datetime.now(timezone.utc).astimezone().isoformat()
+                iso_now = datetime.now(UTC).astimezone().isoformat()
                 update_frontmatter_synced(file_path, iso_now)
 
         except Exception as e:
@@ -95,13 +107,13 @@ def sync_vocab_dir(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Obsidian → Notion 同期（設計書 v4 Phase 3）")
+    parser = argparse.ArgumentParser(description="Obsidian → Notion 同期")
     parser.add_argument("--dry-run", action="store_true", help="確認のみ（ファイル書き換えなし）")
     parser.add_argument("--deck", type=str, help="特定のデッキのみ同期（例: Deutsch）")
     args = parser.parse_args()
 
     print("=" * 56)
-    print("  Obsidian → Notion 同期（設計書 v4 Phase 3）")
+    print("  Obsidian → Notion 同期")
     print("=" * 56)
 
     if args.dry_run:

@@ -4,9 +4,16 @@ import re
 
 
 def convert_markers(example: str, word: str = "") -> str:
-    """例文中の <<word>> マーカーを HTML highlight に変換する。
+    """例文中の <<word>> マーカーを HTML highlight スパンに変換する。
 
-    マーカーがない場合、word で部分一致を試みる（フォールバック）。
+    マーカーがない場合は word で部分一致を試みる（フォールバック）。
+
+    Args:
+        example: 変換対象の例文文字列。
+        word: フォールバック用の単語文字列。
+
+    Returns:
+        HTML 変換後の例文文字列。マーカーも word も見つからない場合はそのまま返す。
     """
     if not example:
         return ""
@@ -23,6 +30,16 @@ def convert_markers(example: str, word: str = "") -> str:
 
 
 def _build_sentence_vocab_note(entry: dict, deck: str, note_type: str) -> dict:
+    """SentenceVocab 用の AnkiConnect note dict を構築する。
+
+    Args:
+        entry: Notion から取得したエントリ辞書。
+        deck: Anki デッキ名。
+        note_type: Anki ノートタイプ名（例: "SentenceVocab_DE"）。
+
+    Returns:
+        AnkiConnect の addNote / updateNoteFields に渡す note 辞書。
+    """
     sentence_html = convert_markers(entry.get("example", ""), entry.get("word", ""))
     return {
         "deckName": deck,
@@ -46,6 +63,15 @@ def _build_sentence_vocab_note(entry: dict, deck: str, note_type: str) -> dict:
 
 
 def _build_term_definition_note(entry: dict, deck: str) -> dict:
+    """TermDefinition 用の AnkiConnect note dict を構築する。
+
+    Args:
+        entry: Notion から取得したエントリ辞書。
+        deck: Anki デッキ名。
+
+    Returns:
+        AnkiConnect の addNote / updateNoteFields に渡す note 辞書。
+    """
     return {
         "deckName": deck,
         "modelName": "TermDefinition",
@@ -59,7 +85,21 @@ def _build_term_definition_note(entry: dict, deck: str) -> dict:
 
 
 def build_anki_note(entry: dict, deck: str, config: dict) -> dict:
-    """エントリから AnkiConnect 用の note dict を構築する。"""
+    """エントリから AnkiConnect 用の note dict を構築する。
+
+    ノートタイプに応じて SentenceVocab または TermDefinition 形式を選択する。
+
+    Args:
+        entry: Notion から取得したエントリ辞書。
+        deck: Anki デッキ名（config の note_types キーと一致）。
+        config: アプリケーション設定辞書。
+
+    Returns:
+        AnkiConnect の addNote / updateNoteFields に渡す note 辞書。
+
+    Raises:
+        ValueError: config に未定義のノートタイプが指定された場合。
+    """
     note_type = config["note_types"][deck]
 
     if note_type.startswith("SentenceVocab"):

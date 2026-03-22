@@ -12,7 +12,14 @@ SCRIPT_DIR = Path(__file__).parent.parent
 
 
 def _expand_env_vars(obj):
-    """YAML 値中の ${VAR_NAME} を環境変数で再帰的に展開する。"""
+    """YAML 値中の ${VAR_NAME} を環境変数で再帰的に展開する。
+
+    Args:
+        obj: 展開対象のオブジェクト（str / dict / list / その他）。
+
+    Returns:
+        環境変数を展開した同型のオブジェクト。
+    """
     if isinstance(obj, str):
         return re.sub(
             r"\$\{(\w+)\}",
@@ -27,9 +34,15 @@ def _expand_env_vars(obj):
 
 
 def _normalize_db_id(raw: str) -> str:
-    """Notion URL からコピーした ID を正規化する。
+    """Notion URL からコピーした DB ID を正規化する。
 
-    '?v=...' を除去し、32桁 hex をハイフン付き UUID に変換する。
+    クエリ文字列（?v=...）を除去し、32桁 hex をハイフン付き UUID に変換する。
+
+    Args:
+        raw: 正規化前の DB ID 文字列。
+
+    Returns:
+        ハイフン付き UUID 形式の DB ID。
     """
     raw = raw.split("?")[0].strip().replace("-", "")
     if len(raw) == 32:
@@ -38,7 +51,14 @@ def _normalize_db_id(raw: str) -> str:
 
 
 def load_config() -> dict:
-    """config.yaml と .env を読み込む。"""
+    """config.yaml と .env を読み込み、設定辞書を返す。
+
+    Returns:
+        展開済みの設定辞書。notion_api_key キーを含む。
+
+    Raises:
+        SystemExit: NOTION_API_KEY 未設定または config.yaml 不在の場合。
+    """
     env_path = SCRIPT_DIR / ".env"
     if env_path.exists():
         load_dotenv(env_path)
@@ -56,7 +76,7 @@ def load_config() -> dict:
         print(f"❌ {config_path} が見つかりません。")
         sys.exit(1)
 
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path, encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     config = _expand_env_vars(config)

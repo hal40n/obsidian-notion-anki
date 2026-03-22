@@ -1,5 +1,5 @@
 """
-Phase 2: Notion → Anki 同期スクリプト
+Notion → Anki 同期スクリプト
 =====================================
 Notion DB から Anki Status = "New" or "Updated" のエントリを取得し、
 AnkiConnect 経由で Anki にカードを追加/更新する。
@@ -8,7 +8,7 @@ AnkiConnect 経由で Anki にカードを追加/更新する。
   - .env に NOTION_API_KEY を設定済み
   - config.yaml に databases, note_types を設定済み
   - Anki デスクトップが起動中 & AnkiConnect 有効
-  - Phase 0 でノートタイプ作成済み
+  - ノートタイプ作成済み
 
 使い方:
   python notion_to_anki.py              # 全DBを同期
@@ -36,7 +36,19 @@ def sync_deck(
     config: dict,
     dry_run: bool = False,
 ) -> dict:
-    """1つのデッキ（Notion DB）を同期する。"""
+    """1つのデッキ（Notion DB）を Anki に同期する。
+
+    Args:
+        notion: Notion クライアントインスタンス。
+        anki_url: AnkiConnect のエンドポイント URL。
+        deck: デッキ名（config の databases キーと一致）。
+        db_id: Notion データベース ID。
+        config: アプリケーション設定辞書。
+        dry_run: True の場合、Anki / Notion への書き込みを行わない。
+
+    Returns:
+        同期結果の統計辞書（added / updated / skipped / errors）。
+    """
     stats = {"added": 0, "updated": 0, "skipped": 0, "errors": 0}
     print(f"\n📖 {deck} (DB: {db_id[:8]}...)")
 
@@ -113,13 +125,13 @@ def sync_deck(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Notion → Anki 同期（設計書 v4 Phase 2）")
+    parser = argparse.ArgumentParser(description="Notion → Anki 同期")
     parser.add_argument("--dry-run", action="store_true", help="実行内容の確認のみ")
     parser.add_argument("--deck", type=str, help="特定のデッキのみ同期（例: Deutsch）")
     args = parser.parse_args()
 
     print("=" * 56)
-    print("  Notion → Anki 同期（設計書 v4 Phase 2）")
+    print("  Notion → Anki 同期")
     print("=" * 56)
 
     if args.dry_run:

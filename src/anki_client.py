@@ -8,7 +8,20 @@ DEFAULT_URL = "http://localhost:8765"
 
 
 def anki_request(action: str, url: str = DEFAULT_URL, **params):
-    """AnkiConnect に JSON リクエストを送信する。"""
+    """AnkiConnect に JSON リクエストを送信する。
+
+    Args:
+        action: AnkiConnect のアクション名（例: "addNote", "version"）。
+        url: AnkiConnect のエンドポイント URL。
+        **params: アクションに渡すパラメータ。
+
+    Returns:
+        AnkiConnect レスポンスの result フィールド。
+
+    Raises:
+        RuntimeError: AnkiConnect がエラーを返した場合。
+        SystemExit: AnkiConnect への接続に失敗した場合。
+    """
     payload = json.dumps({"action": action, "version": 6, "params": params})
     req = urllib.request.Request(
         url,

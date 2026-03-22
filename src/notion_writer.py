@@ -9,22 +9,50 @@ from src.notion_sync import get_text_property
 
 
 def _rich_text(value: str) -> list[dict]:
-    """Rich text プロパティの値を構築する。2000文字超は切り詰める。"""
+    """Rich text プロパティの値を構築する。
+
+    Args:
+        value: テキスト文字列。2000文字を超える場合は切り詰める。
+
+    Returns:
+        Notion API の rich_text プロパティ値リスト。
+    """
     return [{"text": {"content": value[:2000]}}]
 
 
 def _select(value: str) -> dict:
-    """Select プロパティの値を構築する。空文字の場合は None を返す。"""
+    """Select プロパティの値を構築する。
+
+    Args:
+        value: 選択肢名。空文字の場合は None を設定する。
+
+    Returns:
+        Notion API の select プロパティ値辞書。
+    """
     return {"select": {"name": value} if value else None}
 
 
 def _title(value: str) -> list[dict]:
-    """Title プロパティの値を構築する。"""
+    """Title プロパティの値を構築する。
+
+    Args:
+        value: タイトル文字列。
+
+    Returns:
+        Notion API の title プロパティ値リスト。
+    """
     return [{"text": {"content": value}}]
 
 
 def build_lang_properties(entry: LangVocabEntry) -> dict:
-    """言語学習用エントリから Notion properties dict を構築する。"""
+    """言語学習用エントリから Notion properties dict を構築する。
+
+    Args:
+        entry: 言語学習用語彙エントリ。
+
+    Returns:
+        Notion API に渡す properties 辞書。Anki Status は "New" に設定される。
+    """
     return {
         "Word": {"title": _title(entry.word)},
         "Meaning": {"rich_text": _rich_text(entry.meaning)},
@@ -39,7 +67,14 @@ def build_lang_properties(entry: LangVocabEntry) -> dict:
 
 
 def build_cert_properties(entry: CertVocabEntry) -> dict:
-    """資格学習用エントリから Notion properties dict を構築する。"""
+    """資格学習用エントリから Notion properties dict を構築する。
+
+    Args:
+        entry: 資格学習用語彙エントリ。
+
+    Returns:
+        Notion API に渡す properties 辞書。Anki Status は "New" に設定される。
+    """
     return {
         "Term": {"title": _title(entry.word)},
         "Definition": {"rich_text": _rich_text(entry.meaning)},
@@ -49,14 +84,28 @@ def build_cert_properties(entry: CertVocabEntry) -> dict:
 
 
 def build_properties(entry: VocabEntry) -> dict:
-    """エントリ型に応じた properties dict を返す。"""
+    """エントリ型に応じた Notion properties dict を返す。
+
+    Args:
+        entry: 語彙エントリ（LangVocabEntry または CertVocabEntry）。
+
+    Returns:
+        Notion API に渡す properties 辞書。
+    """
     if isinstance(entry, LangVocabEntry):
         return build_lang_properties(entry)
     return build_cert_properties(entry)
 
 
 def _title_prop_name(entry: VocabEntry) -> str:
-    """エントリ型に応じた Title プロパティ名を返す。"""
+    """エントリ型に応じた Notion の Title プロパティ名を返す。
+
+    Args:
+        entry: 語彙エントリ。
+
+    Returns:
+        LangVocabEntry の場合は "Word"、CertVocabEntry の場合は "Term"。
+    """
     return "Word" if isinstance(entry, LangVocabEntry) else "Term"
 
 
@@ -65,7 +114,16 @@ def find_existing_page(
     ds_id: str,
     entry: VocabEntry,
 ) -> dict | None:
-    """Word または Term で既存ページを検索する（API 2025-09-03 準拠）。"""
+    """Word または Term で既存ページを検索する（API 2025-09-03 準拠）。
+
+    Args:
+        notion: Notion クライアントインスタンス。
+        ds_id: data source ID。
+        entry: 検索対象の語彙エントリ。
+
+    Returns:
+        既存ページ辞書。見つからない場合は None。
+    """
     prop_name = _title_prop_name(entry)
     response = notion.data_sources.query(
         ds_id,
@@ -77,7 +135,15 @@ def find_existing_page(
 
 
 def has_content_changed(existing_page: dict, entry: VocabEntry) -> bool:
-    """既存 Notion ページとエントリの内容を比較し、変更があれば True を返す。"""
+    """既存 Notion ページとエントリの内容を比較する。
+
+    Args:
+        existing_page: Notion API から取得した既存ページ辞書。
+        entry: 比較対象の語彙エントリ。
+
+    Returns:
+        内容に変更がある場合は True。
+    """
     props = existing_page.get("properties", {})
 
     if isinstance(entry, LangVocabEntry):
@@ -102,7 +168,16 @@ def has_content_changed(existing_page: dict, entry: VocabEntry) -> bool:
 
 
 def create_page(notion: NotionClient, db_id: str, entry: VocabEntry) -> str:
-    """Notion に新規ページを作成し、作成されたページの ID を返す。"""
+    """Notion に新規ページを作成する。
+
+    Args:
+        notion: Notion クライアントインスタンス。
+        db_id: 作成先データベース ID。
+        entry: 作成する語彙エントリ。
+
+    Returns:
+        作成されたページの ID。
+    """
     result = notion.pages.create(
         parent={"database_id": db_id},
         properties=build_properties(entry),
@@ -115,7 +190,13 @@ def update_page_to_updated(
     page_id: str,
     entry: VocabEntry,
 ) -> None:
-    """既存ページを更新し、Anki Status を "Updated" にする。"""
+    """既存ページの内容を更新し、Anki Status を "Updated" にする。
+
+    Args:
+        notion: Notion クライアントインスタンス。
+        page_id: 更新対象のページ ID。
+        entry: 更新内容を持つ語彙エントリ。
+    """
     props = {**build_properties(entry), "Anki Status": {"select": {"name": "Updated"}}}
     notion.pages.update(page_id=page_id, properties=props)
 
@@ -127,7 +208,21 @@ def upsert_entry(
     entry: VocabEntry,
     dry_run: bool = False,
 ) -> Literal["created", "updated", "skipped"]:
-    """エントリを Notion に登録または更新する。"""
+    """エントリを Notion に登録または更新する。
+
+    既存ページが見つからない場合は新規作成、内容が変わっている場合は更新、
+    変更がない場合はスキップする。
+
+    Args:
+        notion: Notion クライアントインスタンス。
+        db_id: 対象データベース ID。
+        ds_id: data source ID。
+        entry: 登録・更新する語彙エントリ。
+        dry_run: True の場合、API への書き込みを行わない。
+
+    Returns:
+        実行結果を示す文字列（"created" / "updated" / "skipped"）。
+    """
     existing = find_existing_page(notion, ds_id, entry)
 
     if existing is None:
