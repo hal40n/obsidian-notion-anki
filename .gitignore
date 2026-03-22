@@ -6,3 +6,5 @@ __pycache__/
 htmlcov/
 .claude/settings.json
 .cursor/settings.json
+.pytest_cache/
+.ruff_cache/
