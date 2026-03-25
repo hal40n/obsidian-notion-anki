@@ -1,17 +1,16 @@
 """src/notion_writer.py のユニットテスト"""
 
-import pytest
-from pathlib import Path
 from unittest.mock import MagicMock
 
-from src.models import LangVocabEntry, CertVocabEntry
+import pytest
+
+from src.models import CertVocabEntry, LangVocabEntry
 from src.notion_writer import (
     _rich_text,
     _select,
     _title,
-    build_lang_properties,
     build_cert_properties,
-    build_properties,
+    build_lang_properties,
     has_content_changed,
     upsert_entry,
 )
@@ -51,6 +50,7 @@ def mock_notion():
 
 # ── _rich_text ───────────────────────────────────────────────────
 
+
 class TestRichText:
     def test_normal_string(self):
         result = _rich_text("テスト")
@@ -68,6 +68,7 @@ class TestRichText:
 
 # ── _select ──────────────────────────────────────────────────────
 
+
 class TestSelect:
     def test_nonempty_value(self):
         result = _select("Verb")
@@ -80,6 +81,7 @@ class TestSelect:
 
 # ── _title ───────────────────────────────────────────────────────
 
+
 class TestTitle:
     def test_normal_title(self):
         result = _title("gehen")
@@ -87,6 +89,7 @@ class TestTitle:
 
 
 # ── build_lang_properties ────────────────────────────────────────
+
 
 class TestBuildLangProperties:
     def test_has_required_keys(self, lang_entry):
@@ -112,6 +115,7 @@ class TestBuildLangProperties:
 
 # ── build_cert_properties ────────────────────────────────────────
 
+
 class TestBuildCertProperties:
     def test_has_required_keys(self, cert_entry):
         props = build_cert_properties(cert_entry)
@@ -130,6 +134,7 @@ class TestBuildCertProperties:
 
 
 # ── has_content_changed ──────────────────────────────────────────
+
 
 def _make_lang_page(meaning="行く、歩く", pos="Verb"):
     """テスト用 Notion ページ dict を作成する。"""
@@ -156,22 +161,29 @@ def _make_cert_page(meaning="定義", category="ネットワーク"):
 class TestHasContentChanged:
     def test_lang_unchanged_returns_false(self, lang_entry, tmp_path):
         entry = LangVocabEntry(
-            word="gehen", meaning="行く、歩く", deck="Deutsch",
-            file_path=tmp_path / "g.md", pos="Verb",
+            word="gehen",
+            meaning="行く、歩く",
+            deck="Deutsch",
+            file_path=tmp_path / "g.md",
+            pos="Verb",
         )
         page = _make_lang_page(meaning="行く、歩く", pos="Verb")
         assert has_content_changed(page, entry) is False
 
     def test_lang_meaning_changed_returns_true(self, tmp_path):
         entry = LangVocabEntry(
-            word="gehen", meaning="歩く（新しい意味）", deck="Deutsch",
+            word="gehen",
+            meaning="歩く（新しい意味）",
+            deck="Deutsch",
             file_path=tmp_path / "g.md",
         )
         page = _make_lang_page(meaning="行く、歩く")
         assert has_content_changed(page, entry) is True
 
     def test_cert_unchanged_returns_false(self, cert_entry):
-        page = _make_cert_page(meaning="単位時間あたりに処理できるデータ量。", category="ネットワーク")
+        page = _make_cert_page(
+            meaning="単位時間あたりに処理できるデータ量。", category="ネットワーク"
+        )
         assert has_content_changed(page, cert_entry) is False
 
     def test_cert_meaning_changed_returns_true(self, cert_entry):
@@ -181,14 +193,13 @@ class TestHasContentChanged:
 
 # ── upsert_entry ─────────────────────────────────────────────────
 
+
 class TestUpsertEntry:
     def test_creates_new_page_when_not_exists(self, mock_notion, lang_entry):
         mock_notion.data_sources.query.return_value = {"results": []}
         mock_notion.pages.create.return_value = {"id": "new-page-id"}
 
-        result = upsert_entry(
-            mock_notion, "db-id", "ds-id", lang_entry, dry_run=False
-        )
+        result = upsert_entry(mock_notion, "db-id", "ds-id", lang_entry, dry_run=False)
 
         assert result == "created"
         mock_notion.pages.create.assert_called_once()
@@ -201,7 +212,9 @@ class TestUpsertEntry:
         mock_notion.data_sources.query.return_value = {"results": [existing_page]}
 
         entry = LangVocabEntry(
-            word="gehen", meaning="新しい意味", deck="Deutsch",
+            word="gehen",
+            meaning="新しい意味",
+            deck="Deutsch",
             file_path=tmp_path / "g.md",
         )
         result = upsert_entry(mock_notion, "db-id", "ds-id", entry, dry_run=False)
@@ -217,7 +230,9 @@ class TestUpsertEntry:
         mock_notion.data_sources.query.return_value = {"results": [existing_page]}
 
         entry = LangVocabEntry(
-            word="gehen", meaning="行く", deck="Deutsch",
+            word="gehen",
+            meaning="行く",
+            deck="Deutsch",
             file_path=tmp_path / "g.md",
         )
         result = upsert_entry(mock_notion, "db-id", "ds-id", entry, dry_run=False)

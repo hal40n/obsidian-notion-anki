@@ -1,7 +1,8 @@
 """src/note_builder.py のユニットテスト"""
 
 import pytest
-from src.note_builder import convert_markers, build_anki_note
+
+from src.note_builder import build_anki_note, convert_markers
 
 
 @pytest.fixture
@@ -16,6 +17,7 @@ def config():
 
 
 # ── convert_markers ──────────────────────────────────────────────
+
 
 class TestConvertMarkers:
     def test_marker_converted_to_span(self):
@@ -46,6 +48,7 @@ class TestConvertMarkers:
 
 
 # ── build_anki_note ──────────────────────────────────────────────
+
 
 class TestBuildAnkiNote:
     def _lang_entry(self):

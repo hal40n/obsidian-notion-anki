@@ -1,11 +1,11 @@
 """src/anki_client.py のユニットテスト"""
 
 import json
-import pytest
-from unittest.mock import patch, MagicMock
-from io import BytesIO
+from unittest.mock import MagicMock, patch
 
-from src.anki_client import anki_request, DEFAULT_URL
+import pytest
+
+from src.anki_client import DEFAULT_URL, anki_request
 
 
 def _mock_response(result=None, error=None):
@@ -25,9 +25,11 @@ class TestAnkiRequest:
         assert result == 6
 
     def test_raises_runtime_error_on_anki_error(self):
-        with patch("urllib.request.urlopen", return_value=_mock_response(error="duplicate note")):
-            with pytest.raises(RuntimeError, match="duplicate note"):
-                anki_request("addNote")
+        with (
+            patch("urllib.request.urlopen", return_value=_mock_response(error="duplicate note")),
+            pytest.raises(RuntimeError, match="duplicate note"),
+        ):
+            anki_request("addNote")
 
     def test_calls_default_url(self):
         with patch("urllib.request.urlopen", return_value=_mock_response(result=[])) as mock_open:
@@ -51,6 +53,8 @@ class TestAnkiRequest:
             assert payload["params"]["note"]["deckName"] == "Deutsch"
 
     def test_exits_on_connection_error(self):
-        with patch("urllib.request.urlopen", side_effect=Exception("Connection refused")):
-            with pytest.raises(SystemExit):
-                anki_request("version")
+        with (
+            patch("urllib.request.urlopen", side_effect=Exception("Connection refused")),
+            pytest.raises(SystemExit),
+        ):
+            anki_request("version")

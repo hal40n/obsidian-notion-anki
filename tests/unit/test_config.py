@@ -88,11 +88,15 @@ class TestLoadConfig:
     def test_loads_valid_config(self, tmp_path, monkeypatch):
         monkeypatch.setenv("NOTION_API_KEY", "ntn_test")
         monkeypatch.setenv("DEUTSCH_DB", "31e33e926b73807cab95ca196f3dfd3b")
-        self._setup(tmp_path, {
-            "databases": {"Deutsch": "${DEUTSCH_DB}"},
-            "note_types": {"Deutsch": "SentenceVocab_DE"},
-            "obsidian": {"vault_path": str(tmp_path), "vocab_dirs": ["vocab/de"]},
-        }, monkeypatch)
+        self._setup(
+            tmp_path,
+            {
+                "databases": {"Deutsch": "${DEUTSCH_DB}"},
+                "note_types": {"Deutsch": "SentenceVocab_DE"},
+                "obsidian": {"vault_path": str(tmp_path), "vocab_dirs": ["vocab/de"]},
+            },
+            monkeypatch,
+        )
 
         config = load_config()
 

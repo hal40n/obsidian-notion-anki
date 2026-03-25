@@ -70,7 +70,9 @@ def sync_vocab_dir(
 
         db_id = databases.get(entry.deck)
         if not db_id:
-            print(f"  ⚠️  デッキ「{entry.deck}」の DB ID が config.yaml にありません: {file_path.name}")
+            print(
+                f"  ⚠️  デッキ「{entry.deck}」の DB ID が config.yaml にありません: {file_path.name}"
+            )
             stats["errors"] += 1
             continue
 

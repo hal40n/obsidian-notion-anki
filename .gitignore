@@ -5,6 +5,7 @@ __pycache__/
 .coverage.*
 htmlcov/
 .claude/settings.json
+.claude/worktrees/
 .cursor/settings.json
 .pytest_cache/
 .ruff_cache/

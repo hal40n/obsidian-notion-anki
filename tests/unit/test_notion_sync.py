@@ -16,9 +16,15 @@ def _make_page(prop_type: str, prop_name: str, value) -> dict:
     if prop_type == "title":
         return {"properties": {prop_name: {"type": "title", "title": [{"plain_text": value}]}}}
     if prop_type == "rich_text":
-        return {"properties": {prop_name: {"type": "rich_text", "rich_text": [{"plain_text": value}]}}}
+        return {
+            "properties": {prop_name: {"type": "rich_text", "rich_text": [{"plain_text": value}]}}
+        }
     if prop_type == "select":
-        return {"properties": {prop_name: {"type": "select", "select": {"name": value} if value else None}}}
+        return {
+            "properties": {
+                prop_name: {"type": "select", "select": {"name": value} if value else None}
+            }
+        }
     if prop_type == "number":
         return {"properties": {prop_name: {"type": "number", "number": value}}}
     return {"properties": {prop_name: {"type": "unknown"}}}
@@ -137,7 +143,9 @@ class TestFetchEntries:
         notion = MagicMock()
         notion.databases.retrieve.return_value = {"data_sources": [{"id": "ds-id"}]}
         notion.data_sources.query.return_value = {
-            "results": [_make_cert_page("p2", "スループット", "単位時間あたりのデータ量", note_id=12345)],
+            "results": [
+                _make_cert_page("p2", "スループット", "単位時間あたりのデータ量", note_id=12345)
+            ],
             "has_more": False,
             "next_cursor": None,
         }

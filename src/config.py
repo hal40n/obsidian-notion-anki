@@ -80,8 +80,6 @@ def load_config() -> dict:
         config = yaml.safe_load(f)
 
     config = _expand_env_vars(config)
-    config["databases"] = {
-        k: _normalize_db_id(v) for k, v in config.get("databases", {}).items()
-    }
+    config["databases"] = {k: _normalize_db_id(v) for k, v in config.get("databases", {}).items()}
     config["notion_api_key"] = api_key
     return config

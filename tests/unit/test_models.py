@@ -1,9 +1,8 @@
 """src/models.py のユニットテスト"""
 
 import pytest
-from pathlib import Path
 
-from src.models import LangVocabEntry, CertVocabEntry, parse_entry, is_cert_deck
+from src.models import CertVocabEntry, LangVocabEntry, is_cert_deck, parse_entry
 
 
 @pytest.fixture
@@ -28,6 +27,7 @@ def config():
 
 
 # ── LangVocabEntry ──────────────────────────────────────────────
+
 
 class TestLangVocabEntry:
     def test_valid_entry_has_no_errors(self, lang_path):
@@ -63,9 +63,12 @@ class TestLangVocabEntry:
 
 # ── CertVocabEntry ──────────────────────────────────────────────
 
+
 class TestCertVocabEntry:
     def test_valid_entry_has_no_errors(self, cert_path):
-        entry = CertVocabEntry(word="スループット", meaning="定義", deck="応用情報技術者", file_path=cert_path)
+        entry = CertVocabEntry(
+            word="スループット", meaning="定義", deck="応用情報技術者", file_path=cert_path
+        )
         assert entry.validate() == []
 
     def test_missing_word_returns_error(self, cert_path):
@@ -74,7 +77,9 @@ class TestCertVocabEntry:
         assert any("word" in e for e in errors)
 
     def test_missing_meaning_returns_error(self, cert_path):
-        entry = CertVocabEntry(word="スループット", meaning="", deck="応用情報技術者", file_path=cert_path)
+        entry = CertVocabEntry(
+            word="スループット", meaning="", deck="応用情報技術者", file_path=cert_path
+        )
         errors = entry.validate()
         assert any("meaning" in e for e in errors)
 
@@ -84,12 +89,15 @@ class TestCertVocabEntry:
         assert any("deck" in e for e in errors)
 
     def test_is_frozen(self, cert_path):
-        entry = CertVocabEntry(word="スループット", meaning="定義", deck="応用情報技術者", file_path=cert_path)
+        entry = CertVocabEntry(
+            word="スループット", meaning="定義", deck="応用情報技術者", file_path=cert_path
+        )
         with pytest.raises((AttributeError, TypeError)):
             entry.word = "changed"  # type: ignore
 
 
 # ── is_cert_deck ────────────────────────────────────────────────
+
 
 class TestIsCertDeck:
     def test_sentence_vocab_is_not_cert(self, config):
@@ -103,6 +111,7 @@ class TestIsCertDeck:
 
 
 # ── parse_entry ─────────────────────────────────────────────────
+
 
 class TestParseEntry:
     def test_lang_frontmatter_returns_lang_entry(self, lang_path, config):

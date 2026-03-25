@@ -182,7 +182,9 @@ def main() -> None:
     コマンドライン引数を解析し、デッキ・ノートタイプ・サンプルカードを順に作成する。
     """
     parser = argparse.ArgumentParser(description="Anki ノートタイプ自動作成")
-    parser.add_argument("--dry-run", action="store_true", help="実行内容を確認するだけで実際には作成しない")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="実行内容を確認するだけで実際には作成しない"
+    )
     parser.add_argument("--no-samples", action="store_true", help="サンプルカードを追加しない")
     args = parser.parse_args()
 

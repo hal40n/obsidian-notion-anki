@@ -1,20 +1,17 @@
 """src/obsidian_parser.py のユニットテスト"""
 
-import pytest
-from pathlib import Path
-
+from src.models import CertVocabEntry, LangVocabEntry
 from src.obsidian_parser import (
-    parse_frontmatter,
-    is_unsynced,
-    update_frontmatter_synced,
     get_backlinks,
-    scan_vocab_files,
+    is_unsynced,
     load_vocab_entry,
+    parse_frontmatter,
+    scan_vocab_files,
+    update_frontmatter_synced,
 )
-from src.models import LangVocabEntry, CertVocabEntry
-
 
 # ── parse_frontmatter ────────────────────────────────────────────
+
 
 class TestParseFrontmatter:
     def test_valid_frontmatter(self):
@@ -51,6 +48,7 @@ class TestParseFrontmatter:
 
 # ── is_unsynced ──────────────────────────────────────────────────
 
+
 class TestIsUnsynced:
     def test_false_is_unsynced(self):
         assert is_unsynced({"anki_synced": False}) is True
@@ -70,6 +68,7 @@ class TestIsUnsynced:
 
 
 # ── update_frontmatter_synced ────────────────────────────────────
+
 
 class TestUpdateFrontmatterSynced:
     def test_updates_false_to_datetime(self, tmp_path):
@@ -107,6 +106,7 @@ class TestUpdateFrontmatterSynced:
 
 # ── get_backlinks ────────────────────────────────────────────────
 
+
 class TestGetBacklinks:
     def test_full_path_link(self, tmp_path):
         ref_dir = tmp_path / "reference"
@@ -120,9 +120,7 @@ class TestGetBacklinks:
     def test_basename_link(self, tmp_path):
         ref_dir = tmp_path / "reference"
         ref_dir.mkdir()
-        (ref_dir / "Source.md").write_text(
-            "Die [[gehen|gehen]] Konjugation.\n", encoding="utf-8"
-        )
+        (ref_dir / "Source.md").write_text("Die [[gehen|gehen]] Konjugation.\n", encoding="utf-8")
         result = get_backlinks(tmp_path, "vocab/de/gehen")
         assert "Source" in result
 
@@ -137,9 +135,7 @@ class TestGetBacklinks:
         # vocab/ 内の相互リンクは除外
         vocab_dir = tmp_path / "vocab" / "de"
         vocab_dir.mkdir(parents=True)
-        (vocab_dir / "ausgehen.md").write_text(
-            "関連: [[vocab/de/gehen|gehen]]\n", encoding="utf-8"
-        )
+        (vocab_dir / "ausgehen.md").write_text("関連: [[vocab/de/gehen|gehen]]\n", encoding="utf-8")
         result = get_backlinks(tmp_path, "vocab/de/gehen")
         assert "ausgehen" not in result
 
@@ -153,6 +149,7 @@ class TestGetBacklinks:
 
 
 # ── scan_vocab_files ─────────────────────────────────────────────
+
 
 class TestScanVocabFiles:
     def test_finds_md_files(self, mock_vault):
@@ -175,6 +172,7 @@ class TestScanVocabFiles:
 
 
 # ── load_vocab_entry ─────────────────────────────────────────────
+
 
 class TestLoadVocabEntry:
     def test_unsynced_file_returns_entry(self, mock_vault, sample_config):

@@ -21,3 +21,6 @@ obsidian:
 
 anki:
   url: "http://localhost:8765"
+
+# word/ → Notion 登録用ディレクトリ（プロジェクトルートからの相対パス）
+word_dir: "word"

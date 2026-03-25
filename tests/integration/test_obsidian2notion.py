@@ -8,9 +8,7 @@ import pytest
 @pytest.fixture
 def mock_notion():
     notion = MagicMock()
-    notion.databases.retrieve.return_value = {
-        "data_sources": [{"id": "ds-test-id"}]
-    }
+    notion.databases.retrieve.return_value = {"data_sources": [{"id": "ds-test-id"}]}
     notion.data_sources.query.return_value = {"results": []}
     notion.pages.create.return_value = {"id": "new-page-id"}
     return notion
@@ -37,9 +35,7 @@ def mock_config(mock_vault):
 
 
 class TestSyncVocabDir:
-    def test_creates_new_pages_for_unsynced_entries(
-        self, mock_vault, mock_config, mock_notion
-    ):
+    def test_creates_new_pages_for_unsynced_entries(self, mock_vault, mock_config, mock_notion):
         from obsidian2notion import sync_vocab_dir
 
         stats = sync_vocab_dir(
@@ -224,11 +220,26 @@ class TestSyncVocabDir:
                 {
                     "id": "existing-id",
                     "properties": {
-                        "Meaning": {"type": "rich_text", "rich_text": [{"plain_text": "行く、歩く"}]},
-                        "Part of Speech": {"type": "select", "select": {"name": "Verb (unregelmäßig)"}},
-                        "Example": {"type": "rich_text", "rich_text": [{"plain_text": "Ich <<gehe>> jeden Morgen in den Park."}]},
-                        "Example Translation": {"type": "rich_text", "rich_text": [{"plain_text": "私は毎朝公園へ行く。"}]},
-                        "Usage": {"type": "rich_text", "rich_text": [{"plain_text": "gehen + Richtung"}]},
+                        "Meaning": {
+                            "type": "rich_text",
+                            "rich_text": [{"plain_text": "行く、歩く"}],
+                        },
+                        "Part of Speech": {
+                            "type": "select",
+                            "select": {"name": "Verb (unregelmäßig)"},
+                        },
+                        "Example": {
+                            "type": "rich_text",
+                            "rich_text": [{"plain_text": "Ich <<gehe>> jeden Morgen in den Park."}],
+                        },
+                        "Example Translation": {
+                            "type": "rich_text",
+                            "rich_text": [{"plain_text": "私は毎朝公園へ行く。"}],
+                        },
+                        "Usage": {
+                            "type": "rich_text",
+                            "rich_text": [{"plain_text": "gehen + Richtung"}],
+                        },
                     },
                 }
             ]

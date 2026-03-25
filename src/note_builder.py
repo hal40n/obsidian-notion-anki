@@ -55,9 +55,7 @@ def _build_sentence_vocab_note(entry: dict, deck: str, note_type: str) -> dict:
             "Language": entry.get("language", ""),
         },
         "tags": [
-            s.strip().replace(" ", "_")
-            for s in entry.get("sources", "").split(",")
-            if s.strip()
+            s.strip().replace(" ", "_") for s in entry.get("sources", "").split(",") if s.strip()
         ],
     }
 
