@@ -67,14 +67,19 @@ def update_frontmatter_synced(file_path: Path, iso_datetime: str) -> None:
     file_path.write_text(new_content, encoding="utf-8")
 
 
-def get_backlinks(vault_path: Path, target_rel_path: str) -> list[str]:
+def get_backlinks(
+    vault_path: Path,
+    target_rel_path: str,
+    vocab_dirs: list[str] | None = None,
+) -> list[str]:
     """Vault 内を検索し、target_rel_path へのリンクを持つノートのファイル名を返す。
 
-    vocab/ ディレクトリ内のファイルは除外する（相互リンクを Sources に含めない）。
+    vocab_dirs 内のファイルは除外する（相互リンクを Sources に含めない）。
 
     Args:
         vault_path: Obsidian vault のルートパス。
         target_rel_path: 検索対象ノートの vault ルートからの相対パス（拡張子なし）。
+        vocab_dirs: 除外するディレクトリのリスト（vault ルートからの相対パス）。
 
     Returns:
         バックリンク元ノートのファイル名（拡張子なし）のリスト。
@@ -84,15 +89,16 @@ def get_backlinks(vault_path: Path, target_rel_path: str) -> list[str]:
         re.compile(rf"\[\[{re.escape(target_rel_path)}(\|[^\]]+)?\]\]"),
         re.compile(rf"\[\[{re.escape(basename)}(\|[^\]]+)?\]\]"),
     ]
+    excluded = [Path(d) for d in (vocab_dirs or ["vocab"])]
     backlinks: list[str] = []
 
     for md_file in vault_path.rglob("*.md"):
-        # vocab/ ディレクトリ内は除外
+        # vocab_dirs 内は除外
         try:
             rel = md_file.relative_to(vault_path)
         except ValueError:
             continue
-        if rel.parts[0] == "vocab":
+        if any(rel.is_relative_to(d) for d in excluded):
             continue
 
         try:
@@ -161,10 +167,15 @@ def load_vocab_entry(
     if not is_unsynced(frontmatter):
         return None
 
-    # Backlinks（vocab/ からの相対パスを渡す）
+    # Backlinks（vocab_dirs 内のファイルは除外）
+    vocab_dirs: list[str] = config.get("obsidian", {}).get("vocab_dirs", [])
     try:
         rel_path = file_path.relative_to(vault_path)
-        sources = get_backlinks(vault_path, str(rel_path).replace("\\", "/").removesuffix(".md"))
+        sources = get_backlinks(
+            vault_path,
+            str(rel_path).replace("\\", "/").removesuffix(".md"),
+            vocab_dirs,
+        )
     except ValueError:
         sources = []
 

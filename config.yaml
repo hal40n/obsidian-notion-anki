@@ -15,9 +15,9 @@ tts_lang:
 obsidian:
   vault_path: ${OBSIDIAN_VAULT_PATH}
   vocab_dirs:
-    - "vocab/de"
-    - "vocab/en"
-    - "vocab/cert"
+    - "500-reference/vocab/de"
+    - "500-reference/vocab/en"
+    - "500-reference/vocab/cert"
 
 anki:
   url: "http://localhost:8765"
