@@ -39,12 +39,14 @@ origin: project
 
 ユーザーから以下のいずれかを受け取る：
 
-- **ファイルパス**：Vault 内 `100-inbox/` 配下の Markdown、`500-reference/reading/de/` 配下のテキスト
+- **ファイルパス（Web記事）**：`500-reference/webclip/{...}.md` 配下のクリップ済み記事
+- **ファイルパス（書籍）**：`500-reference/books/{...}.md` 配下の読書メモ・抜粋
+- **ファイルパス（その他）**：`100-inbox/` 配下の Markdown（暫定置き場）
 - **URL**：Web記事（取得は WebFetch で実施）
 - **貼り付けテキスト**：チャット欄に直接貼られた長文
-- **Kindle Highlights**：Markdown 形式のハイライト一覧
+- **Kindle Highlights**：Markdown 形式のハイライト一覧（`500-reference/books/` 配下に置かれる想定）
 
-入力が無い場合、`AskUserQuestion` でソースの種類とパスを問う。
+入力が無い場合、`AskUserQuestion` でソースの種類とパスを問う。Vault 構成上、独語に限らないファイルが混在するので、Skill 内で「独語コンテンツかどうか」を簡易判定し、独語でない場合はユーザー確認を行う。
 
 ## 2. スコープの確認
 

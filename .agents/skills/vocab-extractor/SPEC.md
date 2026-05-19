@@ -18,8 +18,11 @@ target_phases:
 ```typescript
 interface ExtractRequest {
   source: {
-    type: "markdown_file" | "url" | "raw_text" | "kindle_highlights";
-    path?: string;        // type が markdown_file / kindle_highlights のとき
+    type: "webclip" | "book" | "inbox" | "url" | "raw_text" | "kindle_highlights";
+    path?: string;        // type が webclip / book / inbox / kindle_highlights のとき
+                          //   webclip: 500-reference/webclip/{...}.md
+                          //   book:    500-reference/books/{...}.md
+                          //   inbox:   100-inbox/{...}.md
     url?: string;         // type が url のとき
     raw_text?: string;    // type が raw_text のとき
     title?: string;       // 出典タイトル（カードの source フィールドに入る）
@@ -31,6 +34,11 @@ interface ExtractRequest {
   vault_root: string;     // Obsidian Vault のルート絶対パス（OBSIDIAN_VAULT_PATH）
 }
 ```
+
+**入力ディレクトリの実態**：
+- `500-reference/webclip/` — Web クリップ（独語に限らず混在）
+- `500-reference/books/` — 書籍メモ・Kindle Highlights（独語に限らず混在）
+- `100-inbox/` — 未整理の暫定置き場
 
 ### 1.2 `Candidate`
 
